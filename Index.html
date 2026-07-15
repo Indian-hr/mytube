@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="youtube">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MyTube</title>
+<style>
+:root{--accent:#ff0033;--accent-2:#cc0000;--bg:#f9f9f9;--surface:#fff;--surface-2:#f1f1f1;
+  --text:#0f0f0f;--muted:#606060;--line:#e5e5e5;--header-bg:#fff;--header-text:#0f0f0f;--header-line:#e5e5e5;
+  --shadow:0 6px 22px rgba(0,0,0,.12);--r:14px}
+[data-theme="ocean"]{--accent:#1a56d6;--accent-2:#0d2c6b;--bg:#f4f7ff;--surface:#fff;--surface-2:#e9f0ff;
+  --text:#0b1530;--muted:#6b7796;--line:#dde6fb;--header-bg:#0d2c6b;--header-text:#fff;--header-line:transparent;--shadow:0 6px 24px rgba(17,57,154,.16)}
+[data-theme="midnight"]{--accent:#3b82f6;--accent-2:#2563eb;--bg:#0c0f16;--surface:#161b26;--surface-2:#1d2331;
+  --text:#eef2fb;--muted:#94a0b8;--line:#252c3a;--header-bg:#0c0f16;--header-text:#eef2fb;--header-line:#1d2331;--shadow:0 10px 30px rgba(0,0,0,.5)}
+[data-theme="sunset"]{--accent:#ff5a36;--accent-2:#ff2d6f;--bg:#1a1016;--surface:#251820;--surface-2:#2f1e28;
+  --text:#fbe9ef;--muted:#c79aa8;--line:#3a2531;--header-bg:#160c12;--header-text:#fbe9ef;--header-line:#3a2531;--shadow:0 10px 30px rgba(0,0,0,.5)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Segoe UI',Roboto,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);transition:background .4s,color .4s}
+button{font-family:inherit;cursor:pointer;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+#splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--bg);transition:opacity .5s,visibility .5s}
+#splash.hide{opacity:0;visibility:hidden}
+.splash-wrap{display:flex;flex-direction:column;align-items:center;gap:18px}
+.splash-logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:34px;letter-spacing:-1px;animation:pop .7s cubic-bezier(.2,.9,.3,1.3) both}
+.spin{width:42px;height:42px;border-radius:50%;border:4px solid var(--surface-2);border-top-color:var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:90;transition:width .3s;box-shadow:0 0 10px var(--accent)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px;letter-spacing:-.5px}
+.logo-img{height:30px;width:auto;border-radius:6px;display:block}
+.logo-glyph{width:34px;height:24px;border-radius:7px;background:var(--accent);display:grid;place-items:center}
+.logo-glyph svg{width:15px;height:15px;color:#fff}
+.splash-logo .logo-glyph{width:48px;height:34px}.splash-logo .logo-img{height:46px}
+.brand-name b{color:var(--accent)}
+#app{display:none;min-height:100%;animation:fadeIn .5s ease both}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;padding:10px 16px;
+  background:var(--header-bg);color:var(--header-text);border-bottom:1px solid var(--header-line);transition:background .4s,color .4s}
+.search{flex:1;max-width:560px;display:flex}
+.search input{flex:1;padding:11px 16px;border:1px solid var(--line);border-radius:24px;font-size:15px;background:var(--surface);color:var(--text)}
+.search input:focus{outline:none;border-color:var(--accent)}
+.iconbtn{background:transparent;border:0;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:17px;color:inherit;transition:background .2s,transform .2s}
+.iconbtn:hover{background:rgba(127,127,127,.18)}.iconbtn:active{transform:scale(.9)}
+.pop-wrap{position:relative}
+#themePop{position:absolute;right:0;top:50px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:10px;display:none;z-index:60;width:172px}
+#themePop.open{display:block;animation:drop .18s ease both}@keyframes drop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.theme-opt{display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:0;padding:9px 8px;border-radius:10px;font-size:14px;color:var(--text)}
+.theme-opt:hover{background:var(--surface-2)}
+.sw{width:20px;height:20px;border-radius:50%;border:2px solid rgba(127,127,127,.3)}
+.layout{display:grid;grid-template-columns:240px 1fr;align-items:start}
+aside{position:sticky;top:63px;height:calc(100vh - 63px);overflow:auto;padding:14px 10px;border-right:1px solid var(--line);background:var(--surface);transition:background .4s}
+.side-h{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 10px 8px}
+.pl{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:11px 12px;border-radius:11px;font-size:15px;color:var(--text);transition:background .15s}
+.pl:hover{background:var(--surface-2)}.pl.active{background:var(--accent);color:#fff}
+.pl .count{margin-left:auto;font-size:12px;opacity:.7}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 8px}
+.chip{padding:7px 12px;border-radius:20px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--text);transition:.15s}
+.chip:hover{border-color:var(--accent)}.chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+main{padding:18px 22px 60px}
+#player{display:none;margin-bottom:22px}
+#player.show{display:block;animation:reveal .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes reveal{from{opacity:0;transform:translateY(-12px) scale(.98)}to{opacity:1;transform:none}}
+.watch{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:22px;align-items:start}
+.video-wrap{position:relative;width:100%;background:#000;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;box-shadow:var(--shadow)}
+.video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-wrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;outline:none}
+#nowTitle{font-size:20px;font-weight:700;margin:14px 2px 2px}
+#nowMeta{color:var(--muted);font-size:14px;margin:2px}
+.sel{display:flex;flex-wrap:wrap;gap:8px;margin:12px 2px 0;align-items:center}
+.sel .lbl{font-size:13px;color:var(--muted);margin-right:4px;font-weight:600}
+.sbtn{padding:6px 12px;border-radius:18px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--text);transition:.15s}
+.sbtn:hover{border-color:var(--accent)}.sbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.sel-hint{font-size:12px;color:var(--muted);margin:8px 2px 0}
+.open-tab{display:inline-block;margin:10px 2px 0;font-size:13px;color:var(--accent);text-decoration:none;font-weight:600}
+.open-tab:hover{text-decoration:underline}
+.upnext{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;max-height:calc(100vh - 120px);overflow:auto}
+.up-h{font-size:14px;font-weight:700;padding:6px 8px 10px}.up-h span{color:var(--muted);font-weight:500}
+.up-row{display:flex;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:7px;border-radius:11px;transition:background .15s;margin-bottom:2px}
+.up-row:hover{background:var(--surface-2)}.up-row.active{background:var(--surface-2)}.up-row.active .up-t{color:var(--accent)}
+.up-thumb{position:relative;flex:0 0 150px;width:150px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+.up-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.up-thumb .b{position:absolute;right:5px;bottom:5px;background:rgba(0,0,0,.78);color:#fff;font-size:11px;padding:2px 6px;border-radius:5px}
+.up-thumb .nowtag{position:absolute;left:5px;top:5px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px}
+.up-info{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.up-t{font-size:14px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.up-p{font-size:12px;color:var(--muted);margin-top:3px}
+.section-h{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 14px}
+.section-h h2{font-size:18px;margin:0}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(248px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;text-align:left;padding:0;transition:transform .15s,box-shadow .15s,border-color .15s;animation:up .45s ease both}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.card:hover,.card:focus-visible{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--accent)}
+.thumb{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.badge{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.78);color:#fff;font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px}
+.tag-audio{position:absolute;left:8px;bottom:8px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
+.play{position:absolute;inset:0;display:grid;place-items:center;opacity:0;background:rgba(0,0,0,.18);transition:opacity .18s}
+.card:hover .play,.card:focus-visible .play{opacity:1}
+.play span{width:54px;height:54px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;transform:scale(.85);transition:transform .18s}
+.card:hover .play span{transform:scale(1)}
+.meta{padding:12px 13px}
+.meta .t{font-weight:600;font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.meta .p{color:var(--muted);font-size:13px;margin-top:4px}
+.empty{color:var(--muted);text-align:center;padding:60px 20px;line-height:1.6}
+#scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35}#hamb{display:none}
+@media (max-width:1100px){.watch{grid-template-columns:1fr}.upnext{max-height:none}}
+@media (max-width:860px){.layout{grid-template-columns:1fr}#hamb{display:grid}
+  header{padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top));gap:10px}
+  aside{position:fixed;top:0;left:0;height:100vh;width:280px;z-index:36;transform:translateX(-100%);transition:transform .24s;box-shadow:var(--shadow)}
+  aside.open{transform:none}.search{max-width:none}main{padding:12px 12px 40px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  /* keep the video visible while scrolling the up-next list */
+  .video-wrap{position:sticky;top:60px;z-index:10;border-radius:10px}
+  #nowTitle{font-size:17px}#nowMeta{font-size:13px}
+  .sbtn{padding:9px 14px;font-size:14px}   /* larger touch targets */
+  .chip{padding:9px 14px;font-size:14px}
+  .pl{padding:13px 12px}
+  .sel-hint,.open-tab{font-size:13px}
+  .up-thumb{flex:0 0 138px;width:138px}
+  .up-row{padding:9px 7px}.up-t{font-size:14px}}
+@media (max-width:430px){.brand-name{display:none}.grid{grid-template-columns:1fr 1fr;gap:10px}
+  .up-thumb{flex:0 0 120px;width:120px}.video-wrap{top:56px}}
+@media (min-width:1600px){html{font-size:18px}.layout{grid-template-columns:320px 1fr}
+  main{padding:30px 48px 80px;max-width:1900px;margin:0 auto}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:26px}
+  .watch{grid-template-columns:minmax(0,1fr) 420px}.pl{font-size:18px;padding:14px 16px}
+  .card:focus-visible{outline-width:5px;transform:translateY(-5px) scale(1.02)}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+
+<!-- =================================================================
+     CONFIG  — edit this block only.
+     ================================================================= -->
+<script>
+var CONFIG = {
+  appName : 'MyTube',
+  logoUrl : '',            // full image URL for the logo (optional)
+  logoFileId : '',         // OR a Drive image file ID (optional)
+
+  // Where the video data comes from: 'webapp' or 'drive'
+  source : 'webapp',
+
+  // --- source:'webapp' --- the Apps Script /exec URL (returns JSON)
+  webAppUrl : 'https://script.google.com/macros/s/AKfycbwmmFM9tJAjZdDpWg2de2pmTQx-KRRmY8QWZh_cdybO2mcL0HW0UfJqR8PJStJfN22V/exec',
+
+  // --- source:'drive' --- direct Drive API (no Apps Script needed)
+  driveApiKey : '',        // Google Cloud API key (Drive API enabled)
+  driveRootFolderId : '',  // the root library folder ID (must be public)
+  maxDepth : 3
+};
+</script>
+
+<div id="splash"><div class="splash-wrap">
+  <div class="splash-logo logo"><span id="logoSplash"></span><span class="brand-name" id="nameSplash">My<b>Tube</b></span></div>
+  <div class="spin"></div>
+</div></div>
+<div id="bar"></div>
+
+<div id="app">
+  <header>
+    <button class="iconbtn" id="hamb" aria-label="Menu" onclick="toggleSide()">&#9776;</button>
+    <div class="logo"><span id="logoHeader"></span><span class="brand-name" id="nameHeader">MyTube</span></div>
+    <div class="search"><input id="q" placeholder="Search videos" oninput="render()"></div>
+    <div class="pop-wrap">
+      <button class="iconbtn" title="Theme" onclick="togglePop(event)">&#127912;</button>
+      <div id="themePop">
+        <button class="theme-opt" onclick="setTheme('youtube')"><span class="sw" style="background:#ff0033"></span>MyTube Red</button>
+        <button class="theme-opt" onclick="setTheme('ocean')"><span class="sw" style="background:#1a56d6"></span>Ocean Blue</button>
+        <button class="theme-opt" onclick="setTheme('midnight')"><span class="sw" style="background:#0c0f16"></span>Midnight</button>
+        <button class="theme-opt" onclick="setTheme('sunset')"><span class="sw" style="background:#ff5a36"></span>Sunset</button>
+      </div>
+    </div>
+    <button class="iconbtn" id="rescanBtn" title="Refresh" onclick="rescan()">&#8635;</button>
+  </header>
+  <div class="layout">
+    <div id="scrim" onclick="toggleSide()"></div>
+    <aside id="side">
+      <div class="side-h">Playlists</div><div id="plList"></div>
+      <div class="side-h">Quality</div><div class="chips" id="catChips"></div>
+    </aside>
+    <main>
+      <div id="player"><div class="watch">
+        <div class="watch-main">
+          <div class="video-wrap"><iframe id="frame" allow="autoplay; encrypted-media; fullscreen" allowfullscreen webkitallowfullscreen mozallowfullscreen playsinline referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+          <div id="nowTitle"></div><div id="nowMeta"></div>
+          <div id="selQuality" class="sel"></div><div id="selAudio" class="sel"></div>
+          <div id="selHint" class="sel-hint"></div>
+        </div>
+        <div class="upnext"><div class="up-h">Up next <span id="upPl"></span></div><div id="upList"></div></div>
+      </div></div>
+      <div class="section-h"><h2 id="gridTitle">All videos</h2><span id="gridCount" style="color:var(--muted);font-size:14px"></span></div>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="empty" style="display:none"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+var GLYPH='<span class="logo-glyph"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>';
+var THEME_KEY='mytube_theme';
+var STATE={playlists:[],categories:[],titles:[],activePl:'all',activeCat:'all'};
+var CURRENT=null,SEL_Q=null,SEL_L=null;
+var RANK={'8K':7,'Ultra HD':6,'QHD':5,'Full HD':4,'HD':3,'SD':2,'360p':1,'Other':0};
+var LANG_MAP={hin:'Hindi',hindi:'Hindi',eng:'English',english:'English',tam:'Tamil',tamil:'Tamil',
+  tel:'Telugu',telugu:'Telugu',mal:'Malayalam',malayalam:'Malayalam',kan:'Kannada',kannada:'Kannada',
+  ben:'Bengali',bengali:'Bengali',mar:'Marathi',marathi:'Marathi',pun:'Punjabi',punjabi:'Punjabi',
+  urdu:'Urdu',guj:'Gujarati',gujarati:'Gujarati',jap:'Japanese',jpn:'Japanese',japanese:'Japanese',
+  kor:'Korean',korean:'Korean',spa:'Spanish',spanish:'Spanish',fre:'French',fra:'French',french:'French',
+  ger:'German',german:'German',dual:'Dual Audio',multi:'Multi Audio',dub:'Dubbed',dubbed:'Dubbed',
+  org:'Original',original:'Original'};
+var QUAL_RE=/\b(4320p|8k|2160p|4k|uhd|ultra\s*-?\s*hd|1440p|2k|qhd|1080p|fhd|full\s*-?\s*hd|720p|hd|480p|sd|360p)\b/gi;
+var LANG_RE=/\b(hindi|hin|english|eng|tamil|tam|telugu|tel|malayalam|mal|kannada|kan|bengali|ben|marathi|mar|punjabi|pun|urdu|gujarati|guj|japanese|jpn|jap|korean|kor|spanish|spa|french|fra|fre|german|ger|dual|multi|dubbed|dub|original|org)\b/gi;
+
+/* ---------- generic helpers ---------- */
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);});}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):s;}
+function uniq(a){var o={},r=[];a.forEach(function(x){if(!o[x]){o[x]=1;r.push(x);}});return r;}
+function byName(a,b){return a.name.localeCompare(b.name,undefined,{numeric:true});}
+function thumbOf(id){return 'https://drive.google.com/thumbnail?id='+id+'&sz=w480-h270';}
+function embedOf(id){return 'https://drive.google.com/file/d/'+id+'/preview';}
+function viewOf(id){return 'https://drive.google.com/file/d/'+id+'/view';}
+function detectCategory(text){var n=String(text).toLowerCase();
+  if(/(4320p|8k)/.test(n))return '8K';
+  if(/(2160p|\b4k\b|uhd|ultra\s*-?\s*hd)/.test(n))return 'Ultra HD';
+  if(/(1440p|2k|qhd)/.test(n))return 'QHD';
+  if(/(1080p|fhd|full\s*-?\s*hd)/.test(n))return 'Full HD';
+  if(/(720p|\bhd\b)/.test(n))return 'HD';
+  if(/(480p|\bsd\b)/.test(n))return 'SD';
+  if(/360p/.test(n))return '360p';
+  return 'Other';}
+function parseMeta(name){var raw=name.replace(/\.[a-z0-9]{2,4}$/i,'');var lower=raw.toLowerCase();
+  var lang='';var m=lower.match(LANG_RE);if(m){var k=m[0].replace(/\s+/g,'');lang=LANG_MAP[k]||'';}
+  var base=raw.replace(/[\[\(\{][^\]\)\}]*[\]\)\}]/g,' ').replace(QUAL_RE,' ').replace(LANG_RE,' ')
+    .replace(/[._\-]+/g,' ').replace(/\s+/g,' ').trim();
+  return {base:base||raw,lang:lang};}
+
+/* ---------- branding ---------- */
+function logoMarkup(){var url=CONFIG.logoUrl||(CONFIG.logoFileId?('https://drive.google.com/thumbnail?id='+CONFIG.logoFileId+'&sz=w240'):'');
+  return url?('<img class="logo-img" src="'+url+'" alt="" onerror="this.outerHTML=GLYPH">'):GLYPH;}
+function applyBranding(){
+  document.getElementById('logoSplash').outerHTML=logoMarkup();
+  document.getElementById('logoHeader').outerHTML=logoMarkup();
+  document.getElementById('nameHeader').textContent=CONFIG.appName;
+  document.title=CONFIG.appName;}
+
+/* ---------- theme ---------- */
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem(THEME_KEY,t);}catch(e){}document.getElementById('themePop').classList.remove('open');}
+(function(){try{var s=localStorage.getItem(THEME_KEY);if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}})();
+function togglePop(e){e.stopPropagation();document.getElementById('themePop').classList.toggle('open');}
+document.addEventListener('click',function(){document.getElementById('themePop').classList.remove('open');});
+
+/* ======================= DATA SOURCES ======================= */
+/* webapp mode: try a normal CORS fetch first (works in mobile Chrome),
+   then fall back to JSONP (script tag) if fetch is blocked. */
+function fetchWebApp(action){
+  var sep=CONFIG.webAppUrl.indexOf('?')>=0?'&':'?';
+  var url=CONFIG.webAppUrl+sep+'api='+(action||'catalog');
+  return fetch(url,{method:'GET',redirect:'follow',cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.text();
+  }).then(function(t){return JSON.parse(t);});
+}
+function jsonpWebApp(action){
+  return new Promise(function(res,rej){
+    var cb='__mt_'+Date.now()+Math.floor(Math.random()*1e4);
+    window[cb]=function(d){cleanup();res(d);};
+    var sep=CONFIG.webAppUrl.indexOf('?')>=0?'&':'?';
+    var s=document.createElement('script');
+    s.src=CONFIG.webAppUrl+sep+'api='+(action||'catalog')+'&callback='+cb;
+    s.onerror=function(){cleanup();rej(new Error('Could not reach the web app (check deployment access = Anyone).'));};
+    var to=setTimeout(function(){cleanup();rej(new Error('Timed out reaching the web app.'));},25000);
+    function cleanup(){clearTimeout(to);try{delete window[cb];}catch(e){window[cb]=undefined;}if(s.parentNode)s.parentNode.removeChild(s);}
+    document.body.appendChild(s);
+  });
+}
+function fetchFromWebApp(action){
+  return fetchWebApp(action).catch(function(){ return jsonpWebApp(action); });
+}
+/* drive mode: Drive API v3 with an API key (public folder) */
+function driveList(folderId){
+  var files=[];
+  function page(token){
+    var q="'"+folderId+"' in parents and trashed=false";
+    var url='https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)
+      +'&key='+encodeURIComponent(CONFIG.driveApiKey)
+      +'&fields='+encodeURIComponent('nextPageToken,files(id,name,mimeType)')
+      +'&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true'
+      +(token?('&pageToken='+token):'');
+    return fetch(url).then(function(r){return r.json();}).then(function(j){
+      if(j.error)throw new Error(j.error.message||'Drive API error');
+      files=files.concat(j.files||[]);
+      return j.nextPageToken?page(j.nextPageToken):files;
+    });
+  }
+  return page('');
+}
+function gather(folderId,pathPrefix,depth,out){
+  return driveList(folderId).then(function(files){
+    var chain=Promise.resolve();
+    files.forEach(function(f){
+      if(f.mimeType==='application/vnd.google-apps.folder'){
+        if(depth>1)chain=chain.then(function(){return gather(f.id,pathPrefix+' '+f.name,depth-1,out);});
+      }else if(f.mimeType&&f.mimeType.indexOf('video/')===0){
+        out.push({id:f.id,name:f.name,category:detectCategory(pathPrefix+' '+f.name),thumb:thumbOf(f.id),embed:embedOf(f.id)});
+      }
+    });
+    return chain;
+  });
+}
+function fetchFromDrive(){
+  if(!CONFIG.driveApiKey||!CONFIG.driveRootFolderId)
+    return Promise.reject(new Error('Set driveApiKey and driveRootFolderId in CONFIG.'));
+  return driveList(CONFIG.driveRootFolderId).then(function(rootFiles){
+    var playlists=[],cats={},chain=Promise.resolve();
+    rootFiles.forEach(function(f){
+      if(f.mimeType==='application/vnd.google-apps.folder'){
+        chain=chain.then(function(){
+          var vids=[];return gather(f.id,f.name,CONFIG.maxDepth,vids).then(function(){
+            vids.sort(byName);vids.forEach(function(v){cats[v.category]=1;});
+            playlists.push({id:f.id,name:f.name,videos:vids});
+          });
+        });
+      }
+    });
+    return chain.then(function(){
+      var loose=rootFiles.filter(function(f){return f.mimeType&&f.mimeType.indexOf('video/')===0;})
+        .map(function(f){return {id:f.id,name:f.name,category:detectCategory(f.name),thumb:thumbOf(f.id),embed:embedOf(f.id)};});
+      if(loose.length){loose.sort(byName);loose.forEach(function(v){cats[v.category]=1;});
+        playlists.push({id:CONFIG.driveRootFolderId,name:'Library',videos:loose});}
+      return {ok:true,playlists:playlists,categories:Object.keys(cats).sort(function(a,b){return (RANK[b]||0)-(RANK[a]||0);})};
+    });
+  });
+}
+function fetchCatalog(){return CONFIG.source==='drive'?fetchFromDrive():fetchFromWebApp('catalog');}
+
+/* ======================= LOAD + RENDER ======================= */
+window.addEventListener('load',function(){applyBranding();load(true);});
+
+function load(first){
+  return fetchCatalog().then(function(c){
+    if(!c||!c.ok)throw new Error('No data returned.');
+    STATE.playlists=c.playlists||[];STATE.categories=c.categories||[];
+    buildTitles();buildSidebar();render();
+    if(first){document.getElementById('app').style.display='block';
+      setTimeout(function(){document.getElementById('splash').classList.add('hide');},250);}
+  }).catch(function(err){
+    document.getElementById('app').style.display='block';
+    document.getElementById('splash').classList.add('hide');
+    var e=document.getElementById('empty');e.style.display='block';
+    e.innerHTML='Could not load the library.<br>'+esc(err.message||'')+'<br><br>If only mobile Chrome fails, redeploy the web app with <b>Who has access: Anyone</b> (not &ldquo;Anyone with a Google account&rdquo;).';
+  });
+}
+
+function buildTitles(){
+  STATE.titles=[];var groups={},order=[];
+  STATE.playlists.forEach(function(p){p.videos.forEach(function(f){
+    var meta=parseMeta(f.name);var key=p.id+'|'+meta.base.toLowerCase();
+    if(!groups[key]){groups[key]={plId:p.id,plName:p.name,base:meta.base,thumb:f.thumb,variants:[]};order.push(key);}
+    groups[key].variants.push({id:f.id,name:f.name,category:f.category,lang:meta.lang,
+      embed:f.embed||embedOf(f.id),view:viewOf(f.id),thumb:f.thumb});
+  });});
+  order.forEach(function(k){var t=groups[k];
+    t.variants.sort(function(a,b){return (RANK[b.category]||0)-(RANK[a.category]||0);});
+    t.categories=uniq(t.variants.map(function(v){return v.category;}));
+    t.langs=uniq(t.variants.map(function(v){return v.lang;}).filter(Boolean));
+    t.title=cap(t.base);t.idx=STATE.titles.length;STATE.titles.push(t);});
+}
+function buildSidebar(){
+  var total=STATE.titles.length;
+  var html='<button class="pl '+(STATE.activePl==='all'?'active':'')+'" onclick="pick(\'all\')"><span>All videos</span><span class="count">'+total+'</span></button>';
+  STATE.playlists.forEach(function(p){var n=STATE.titles.filter(function(t){return t.plId===p.id;}).length;
+    html+='<button class="pl '+(STATE.activePl===p.id?'active':'')+'" onclick="pick(\''+p.id+'\')"><span>'+esc(p.name)+'</span><span class="count">'+n+'</span></button>';});
+  document.getElementById('plList').innerHTML=html;
+  var chips='<button class="chip '+(STATE.activeCat==='all'?'active':'')+'" onclick="pickCat(\'all\')">All</button>';
+  STATE.categories.forEach(function(c){chips+='<button class="chip '+(STATE.activeCat===c?'active':'')+'" onclick="pickCat(\''+esc(c)+'\')">'+esc(c)+'</button>';});
+  document.getElementById('catChips').innerHTML=chips;
+}
+function pick(id){STATE.activePl=id;buildSidebar();render();closeSideOnMobile();}
+function pickCat(c){STATE.activeCat=c;buildSidebar();render();}
+
+function render(){
+  var q=(document.getElementById('q').value||'').toLowerCase().trim();
+  var list=STATE.titles.slice();
+  if(STATE.activePl!=='all')list=list.filter(function(t){return t.plId===STATE.activePl;});
+  if(STATE.activeCat!=='all')list=list.filter(function(t){return t.categories.indexOf(STATE.activeCat)>=0;});
+  if(q)list=list.filter(function(t){return t.title.toLowerCase().indexOf(q)>=0||t.plName.toLowerCase().indexOf(q)>=0;});
+  var plName=STATE.activePl==='all'?'All videos':((STATE.playlists.filter(function(p){return p.id===STATE.activePl;})[0]||{}).name||'Videos');
+  document.getElementById('gridTitle').textContent=plName;
+  document.getElementById('gridCount').textContent=list.length+(list.length===1?' video':' videos');
+  var grid=document.getElementById('grid'),empty=document.getElementById('empty');
+  if(!list.length){grid.innerHTML='';empty.style.display='block';
+    empty.textContent=STATE.titles.length?'No videos match your filters.':'Library is empty.';return;}
+  empty.style.display='none';
+  grid.innerHTML=list.map(function(t,i){var d=Math.min(i,18)*0.03;
+    var at=t.langs.length>1?('<div class="tag-audio">'+t.langs.length+' audio</div>'):'';
+    return '<button class="card" style="animation-delay:'+d+'s" onclick="play('+t.idx+')" aria-label="Play '+esc(t.title)+'">'+
+      '<div class="thumb"><img src="'+t.thumb+'" loading="lazy" onerror="this.style.display=\'none\'">'+
+      '<div class="badge">'+esc(t.categories[0])+'</div>'+at+
+      '<div class="play"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span></div></div>'+
+      '<div class="meta"><div class="t">'+esc(t.title)+'</div><div class="p">'+esc(t.plName)+'</div></div></button>';
+  }).join('');
+}
+
+function play(idx){CURRENT=STATE.titles[idx];if(!CURRENT)return;
+  SEL_Q=CURRENT.categories[0];SEL_L=CURRENT.langs.length?CURRENT.langs[0]:'';
+  renderSelectors();loadVariant();renderUpNext();
+  var p=document.getElementById('player');p.classList.remove('show');void p.offsetWidth;p.classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});}
+function pickVariant(){var vs=CURRENT.variants;
+  var ex=vs.filter(function(v){return v.category===SEL_Q&&(SEL_L?v.lang===SEL_L:true);});if(ex.length)return ex[0];
+  var bq=vs.filter(function(v){return v.category===SEL_Q;});if(bq.length)return bq[0];
+  var bl=vs.filter(function(v){return v.lang===SEL_L;});if(bl.length)return bl[0];
+  return vs[0];}
+function renderSelectors(){
+  document.getElementById('nowTitle').textContent=CURRENT.title;
+  document.getElementById('nowMeta').textContent=CURRENT.plName;
+  var qEl=document.getElementById('selQuality'),aEl=document.getElementById('selAudio'),hint=document.getElementById('selHint');
+  qEl.innerHTML=CURRENT.categories.length>1?('<span class="lbl">Quality</span>'+CURRENT.categories.map(function(c){return '<button class="sbtn '+(c===SEL_Q?'active':'')+'" onclick="selQ(\''+esc(c)+'\')">'+esc(c)+'</button>';}).join('')):'';
+  aEl.innerHTML=CURRENT.langs.length>1?('<span class="lbl">Audio</span>'+CURRENT.langs.map(function(l){return '<button class="sbtn '+(l===SEL_L?'active':'')+'" onclick="selL(\''+esc(l)+'\')">'+esc(l)+'</button>';}).join('')):'';
+  var emb=CURRENT.langs.some(function(l){return l==='Dual Audio'||l==='Multi Audio';});
+  if(CURRENT.categories.length>1||CURRENT.langs.length>1)hint.textContent='Switching reloads the video from the start.';
+  else if(emb)hint.textContent='This file has multiple audio tracks \u2014 use the player\u2019s gear menu to switch audio.';
+  else hint.textContent='';
+}
+function selQ(c){SEL_Q=c;renderSelectors();loadVariant();}
+function selL(l){SEL_L=l;renderSelectors();loadVariant();}
+/* Play using Google Drive's embedded player (external, inline in the page).
+   Drive handles the streaming/transcoding itself, so this works for large
+   UHD/MKV files where a native <video> would fail. No popup, no new tab. */
+function loadVariant(){
+  var v=pickVariant();
+  document.getElementById('frame').src=v.embed;
+}
+function renderUpNext(){
+  var rows=STATE.titles.filter(function(t){return t.plId===CURRENT.plId;});
+  document.getElementById('upPl').textContent='\u00b7 '+CURRENT.plName;
+  document.getElementById('upList').innerHTML=rows.map(function(t){var active=t.idx===CURRENT.idx;
+    var at=t.langs.length>1?(' \u00b7 '+t.langs.length+' audio'):'';
+    return '<button class="up-row '+(active?'active':'')+'" onclick="play('+t.idx+')">'+
+      '<div class="up-thumb"><img src="'+t.thumb+'" loading="lazy" onerror="this.style.display=\'none\'">'+
+      (active?'<div class="nowtag">Now playing</div>':'')+'<div class="b">'+esc(t.categories[0])+'</div></div>'+
+      '<div class="up-info"><div class="up-t">'+esc(t.title)+'</div><div class="up-p">'+esc(t.plName)+at+'</div></div></button>';}).join('');
+  var cur=document.querySelector('.up-row.active');if(cur&&cur.scrollIntoView)cur.scrollIntoView({block:'nearest'});
+}
+function rescan(){var bar=document.getElementById('bar');bar.style.width='35%';
+  var p=CONFIG.source==='drive'?load(false):fetchFromWebApp('rescan').then(function(){return load(false);});
+  p.then(function(){bar.style.width='100%';setTimeout(function(){bar.style.width='0';},400);})
+   .catch(function(){bar.style.width='0';});}
+function toggleSide(){var s=document.getElementById('side');s.classList.toggle('open');document.getElementById('scrim').style.display=s.classList.contains('open')?'block':'none';}
+function closeSideOnMobile(){if(window.innerWidth<=860){document.getElementById('side').classList.remove('open');document.getElementById('scrim').style.display='none';}}
+</script>
+</body>
+</html>
